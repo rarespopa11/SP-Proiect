@@ -1,34 +1,147 @@
+<!DOCTYPE html>
 <html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>All Books</title>
+    <style>
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background-color: #f0f2f5;
+            margin: 0;
+            padding: 0;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            height: 100vh;
+        }
+
+        header {
+            background-color: #2c3e50;
+            color: white;
+            padding: 20px 0;
+            text-align: center;
+            border-radius: 8px 8px 0 0;
+            width: 100%;
+            max-width: 900px;
+        }
+
+        h1 {
+            margin: 0;
+            font-size: 2.5rem;
+        }
+
+        .container {
+            background-color: white;
+            border-radius: 8px;
+            box-shadow: 0 10px 20px rgba(0, 0, 0, 0.1);
+            padding: 40px;
+            width: 100%;
+            max-width: 900px;
+            text-align: center;
+        }
+
+        a {
+            display: inline-block;
+            padding: 15px 30px;
+            background-color: #3498db;
+            color: white;
+            font-size: 1.1rem;
+            text-decoration: none;
+            border-radius: 5px;
+            margin-bottom: 20px;
+            transition: background-color 0.3s ease, transform 0.3s ease;
+        }
+
+        a:hover {
+            background-color: #2980b9;
+            transform: translateY(-2px);
+        }
+
+        a:active {
+            transform: translateY(1px);
+        }
+
+        #sseDiv {
+            margin-top: 20px;
+            max-height: 400px;
+            overflow-y: auto;
+            text-align: left;
+            font-size: 1.1rem;
+            line-height: 1.6;
+        }
+
+        .book {
+            background-color: #ecf0f1;
+            margin-bottom: 15px;
+            padding: 15px;
+            border-radius: 8px;
+            box-shadow: 0 3px 6px rgba(0, 0, 0, 0.1);
+            border-left: 5px solid #3498db;
+            transition: transform 0.2s ease, background-color 0.3s ease;
+        }
+
+        .book:hover {
+            background-color: #dfe6e9;
+            transform: translateX(5px);
+        }
+
+        .book span {
+            font-weight: bold;
+            color: #2c3e50;
+        }
+
+        .book .book-title {
+            font-size: 1.2rem;
+            color: #34495e;
+        }
+
+        #unsupportedMessage {
+            color: #e74c3c;
+            font-size: 1.2rem;
+            margin-top: 20px;
+        }
+    </style>
+</head>
 <body>
 
-<h1>All Books</h1>
+<header>
+    <h1>All Books</h1>
+</header>
 
-<a href="javascript:void(0)" onclick="sendRequest()">Fetch Books</a>
+<div class="container">
+    <a href="javascript:void(0)" onclick="sendRequest()">Get Books</a>
 
-<div id="sseDiv"></div>
+    <div id="sseDiv"></div>
+    <div id="unsupportedMessage" style="display:none;">Your browser does not support server-sent events.</div>
+</div>
 
 <script>
     function sendRequest() {
+        const sseDiv = document.getElementById("sseDiv");
+        const unsupportedMessage = document.getElementById("unsupportedMessage");
+
         if (typeof (EventSource) !== "undefined") {
+            unsupportedMessage.style.display = "none";
+
             const source = new EventSource("http://localhost:8080/books-sse");
 
-            // Listen for messages from the server
             source.onmessage = function (event) {
                 const data = JSON.parse(event.data);
                 let authorsText = "";
 
-                // If authors array exists, loop through and display each author's name and surname
                 if (data.authors && Array.isArray(data.authors)) {
-                    authorsText = data.authors.map(author => author.name + " " + author.surname).join(", ");
+                    authorsText = data.authors.map(author => `${author.name} ${author.surname}`).join(", ");
                 }
 
-                // Display the book's details
-                document.getElementById("sseDiv").innerHTML += `${data.id} - ${data.title} by ${authorsText} <br>`;
-            };
+                const bookDetails = document.createElement('div');
+                bookDetails.classList.add('book');
+                bookDetails.innerHTML = `<span>Book ID:</span> ${data.id} <br><span class="book-title">Title:</span> ${data.title} <br><span>Authors:</span> ${authorsText}`;
 
+                sseDiv.appendChild(bookDetails);
+            };
         } else {
-            // Handle browsers that do not support SSE
-            document.getElementById("sseDiv").innerHTML = "Your browser does not support server-sent events.";
+            unsupportedMessage.style.display = "block";
         }
     }
 </script>
